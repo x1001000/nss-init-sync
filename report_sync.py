@@ -41,10 +41,10 @@ def compare_size(dir_name: str, src_path: str, des_path: str, method: str):
     dir_src_path = os.path.join(src_path, dir_name) 
     dir_des_path = os.path.join(des_path, dir_name)
     if method == "d":
-        print(f"Dir Name: {dir_name} | Local Dir Size: {get_dir_size(dir_src_path)}, Net Dir Size: {get_dir_size(dir_des_path)}")
+        print(f"({dir_name}\t local: {get_dir_size(dir_src_path)}\t netdrive : {get_dir_size(dir_des_path)})")
         return get_dir_size(dir_src_path) > get_dir_size(dir_des_path)
     if method == "f":
-        print(f"File Name: {dir_name} | Local File Size: {os.path.getsize(dir_src_path)}, Net File Size: {os.path.getsize(dir_des_path)}")
+        print(f"({dir_name}\t local: {os.path.getsize(dir_src_path)}\t netdrive: {os.path.getsize(dir_des_path)})")
         return os.path.getsize(dir_src_path) > os.path.getsize(dir_des_path)
 
 def sync_dir(dir_name: str, ori_path: str, target_path: str):
@@ -90,7 +90,7 @@ def compare_two_list(src_list: list, des_list: list, method: str):
 
 if __name__ == '__main__':
     with open(upload_progress_ns, 'w') as upload_progress:
-        upload_progress.write('Uploading...\n')
+        upload_progress.write('...\n')
 
     dt = datetime.datetime.today()
     log_file_name = f"log_{dt.date()}_{dt.hour}-{dt.minute}-{dt.second}.txt"
@@ -154,6 +154,8 @@ if __name__ == '__main__':
                 uploading = uploaded = 0
                 for idx, dir in enumerate(sync_dir_list):
                     uploading += len(os.listdir(os.path.join(local_Result, dir)))
+                with open(upload_progress_ns, 'a') as upload_progress:
+                    upload_progress.write('0\n')
                 for idx, dir in enumerate(sync_dir_list):
                     #print(f"({idx+1}/{len(sync_dir_list)}) Syncing {dir}")
                     sync_dir(dir, local_Result, netdrive_Result)
@@ -161,7 +163,7 @@ if __name__ == '__main__':
                     print(f'{dir} folder is synced. ({idx+1}/{len(sync_dir_list)})')
                     uploaded += len(os.listdir(os.path.join(local_Result, dir)))
                     with open(upload_progress_ns, 'a') as upload_progress:
-                        upload_progress.write(f'{uploaded}/{uploading}\n')
+                        upload_progress.write(f'{100 * uploaded // uploading}\n')
 
                     sync_log.write(f'{dt.date()},{dt.hour:2d}:{dt.minute:2d}:{dt.second:2d},{dir},')
                     sync_log.write(','.join(os.listdir(os.path.join(local_Result, dir))))

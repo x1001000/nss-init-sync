@@ -3,8 +3,7 @@ import os, shutil, sys
 import time, datetime
 
 ### Phil 20210814 ###
-from os.path import expanduser
-sync_log_csv = os.path.join(expanduser('~'), 'Desktop', 'sync_log.csv')
+sync_log_csv = os.path.join(os.path.expanduser('~'), 'Desktop', 'sync_log.csv')
 upload_progress_ns = os.path.join(os.getcwd(), 'upload_progress.ns')
 
 local_Result = os.path.join(os.getcwd(), "Result")

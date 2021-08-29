@@ -13,14 +13,14 @@ local_Result = os.path.join(os.getcwd(), "Result")
 local_logs = os.path.join(os.getcwd(), "logs")
 local_ReportSyncLog = os.path.join(os.getcwd(), "ReportSyncLog")
 
-netdrive = r"N:"
-netdrive_Result = r"N:Result"
-netdrive_logs = r'N:logs'
-netdrive_ReportSyncLog = r'N:ReportSyncLog'
+Ndrive = r"N:"
+Ndrive_Result = r"N:Result"
+Ndrive_logs = r'N:logs'
+Ndrive_ReportSyncLog = r'N:ReportSyncLog'
 
-# netdrive_Result = r"C:\Users\b03501063\Desktop\AWS2"
-# netdrive_ReportSyncLog = r'C:\Users\b03501063\Desktop\AWS2\ReportSyncLog'
-# netdrive_logs = r'C:\Users\b03501063\Desktop\AWS2\logs'
+# Ndrive_Result = r"C:\Users\b03501063\Desktop\AWS2"
+# Ndrive_ReportSyncLog = r'C:\Users\b03501063\Desktop\AWS2\ReportSyncLog'
+# Ndrive_logs = r'C:\Users\b03501063\Desktop\AWS2\logs'
 
 # directory processing
 def crawler(path: str, method: str):
@@ -41,10 +41,10 @@ def compare_size(dir_name: str, src_path: str, des_path: str, method: str):
     dir_src_path = os.path.join(src_path, dir_name) 
     dir_des_path = os.path.join(des_path, dir_name)
     if method == "d":
-        print(f"({dir_name}\t local: {get_dir_size(dir_src_path)}\t netdrive : {get_dir_size(dir_des_path)})")
+        print(f"({dir_name}\t local: {get_dir_size(dir_src_path)}\t Ndrive : {get_dir_size(dir_des_path)})")
         return get_dir_size(dir_src_path) > get_dir_size(dir_des_path)
     if method == "f":
-        print(f"({dir_name}\t local: {os.path.getsize(dir_src_path)}\t netdrive: {os.path.getsize(dir_des_path)})")
+        print(f"({dir_name}\t local: {os.path.getsize(dir_src_path)}\t Ndrive: {os.path.getsize(dir_des_path)})")
         return os.path.getsize(dir_src_path) > os.path.getsize(dir_des_path)
 
 def sync_dir(dir_name: str, ori_path: str, target_path: str):
@@ -88,7 +88,7 @@ def compare_two_list(src_list: list, des_list: list, method: str):
     elif method == 'd':
         return sorted(list(set(src_list).difference(des_list)))
 
-if __name__ == '__main__':
+try:
     with open(upload_progress_ns, 'w') as upload_progress:
         upload_progress.write('...\n')
 
@@ -102,57 +102,57 @@ if __name__ == '__main__':
     # Syncing and Logging local_ReportSyncLog
     with open(log_file_name, 'w') as f:
         sys.stdout = f
-        if os.path.exists(netdrive):
+        if os.path.exists(Ndrive):
             # Result
-            if not os.path.exists(netdrive_Result):
-                os.mkdir(netdrive_Result)
+            if not os.path.exists(Ndrive_Result):
+                os.mkdir(Ndrive_Result)
             # logs
-            if not os.path.exists(netdrive_logs):
-                os.mkdir(netdrive_logs)
+            if not os.path.exists(Ndrive_logs):
+                os.mkdir(Ndrive_logs)
             # ReportSyncLog
-            if not os.path.exists(netdrive_ReportSyncLog):
-                os.mkdir(netdrive_ReportSyncLog)
+            if not os.path.exists(Ndrive_ReportSyncLog):
+                os.mkdir(Ndrive_ReportSyncLog)
 
             # Result folders
             local_Result_folders = crawler(local_Result, "d")
-            netdrive_Result_folders = crawler(netdrive_Result, "d")
+            Ndrive_Result_folders = crawler(Ndrive_Result, "d")
             # logs files
             local_logs_files = crawler(local_logs, "f")
-            netdrive_logs_files = crawler(netdrive_logs, "f")
+            Ndrive_logs_files = crawler(Ndrive_logs, "f")
             # ReportSyncLog files
             local_ReportSyncLog_files =crawler(local_ReportSyncLog, "f")
-            netdrive_ReportSyncLog_files = crawler(netdrive_ReportSyncLog, "f")
+            Ndrive_ReportSyncLog_files = crawler(Ndrive_ReportSyncLog, "f")
 
             ### Phil 20210829
             site = re.search('H\d\d', str(local_Result_folders)).group(0)
 
             print("=== Result folders to sync ===")
-            intersection_dir_list = compare_two_list(local_Result_folders, netdrive_Result_folders, "i")
+            Result_folders_inter = compare_two_list(local_Result_folders, Ndrive_Result_folders, "i")
             #print("=== Compare Same Dir Size (..\Result) ===")
-            intersection_dir_list = [d for d in intersection_dir_list if compare_size(d, local_Result, netdrive_Result, "d")]
-            difference_dir_list = compare_two_list(local_Result_folders, netdrive_Result_folders, "d")
-            sync_dir_list = sorted(intersection_dir_list + difference_dir_list)
-            print('\n'.join(sync_dir_list))
+            Result_folders_inter = [d for d in Result_folders_inter if compare_size(d, local_Result, Ndrive_Result, "d")]
+            Result_folders_diff = compare_two_list(local_Result_folders, Ndrive_Result_folders, "d")
+            Result_folders_sync = sorted(Result_folders_inter + Result_folders_diff)
+            print('\n'.join(Result_folders_sync))
             print()
 
             ### Phil 20210829
-            payload = {'site': site, 'case': sync_dir_list}
+            payload = {'site': site, 'case': Result_folders_sync}
             requests.get('https://deqg3un8ha.execute-api.eu-central-1.amazonaws.com/start', params=payload)
 
             print('=== logs files to sync ===')
-            intersection_report_file_list = compare_two_list(local_logs_files, netdrive_logs_files, "i")
+            logs_files_inter = compare_two_list(local_logs_files, Ndrive_logs_files, "i")
             #print("=== Compare Same Log Files Size (..\logs) ===")
-            intersection_report_file_list = [f for f in intersection_report_file_list if compare_size(f, local_logs, netdrive_logs, "f")]
-            difference_report_file_list = compare_two_list(local_logs_files, netdrive_logs_files, "d")
-            sync_report_file_list = sorted(intersection_report_file_list + difference_report_file_list)
-            print('\n'.join(sync_report_file_list))
+            logs_files_inter = [f for f in logs_files_inter if compare_size(f, local_logs, Ndrive_logs, "f")]
+            logs_files_diff = compare_two_list(local_logs_files, Ndrive_logs_files, "d")
+            logs_files_sync = sorted(logs_files_inter + logs_files_diff)
+            print('\n'.join(logs_files_sync))
             print()
 
             print('=== ReportSyncLog files to sync ===')
-            difference_sync_file_list = compare_two_list(local_ReportSyncLog_files, netdrive_ReportSyncLog_files, "d")
-            sync_sync_file_list = sorted(difference_sync_file_list)
+            ReportSyncLog_files_diff = compare_two_list(local_ReportSyncLog_files, Ndrive_ReportSyncLog_files, "d")
+            ReportSyncLog_files_sync = sorted(ReportSyncLog_files_diff)
             #print("\n=== File Sync List ===")
-            print('\n'.join(sync_sync_file_list))
+            print('\n'.join(ReportSyncLog_files_sync))
             print()
 
             if not os.path.exists('SyncLog.csv'):
@@ -161,15 +161,15 @@ if __name__ == '__main__':
             with open('SyncLog.csv', 'a') as synclog:
                 print("Syncing patient folders in Result...")
                 uploading = uploaded = 0
-                for idx, dir in enumerate(sync_dir_list):
+                for idx, dir in enumerate(Result_folders_sync):
                     uploading += len(os.listdir(os.path.join(local_Result, dir)))
                 with open(upload_progress_ns, 'a') as upload_progress:
                     upload_progress.write('0\n')
-                for idx, dir in enumerate(sync_dir_list):
-                    #print(f"({idx+1}/{len(sync_dir_list)}) Syncing {dir}")
-                    sync_dir(dir, local_Result, netdrive_Result)
-                    #print(f"({idx+1}/{len(sync_dir_list)}) Synced {dir}\n")
-                    print(f'{dir} folder is synced. ({idx+1}/{len(sync_dir_list)})')
+                for idx, dir in enumerate(Result_folders_sync):
+                    #print(f"({idx+1}/{len(Result_folders_sync)}) Syncing {dir}")
+                    sync_dir(dir, local_Result, Ndrive_Result)
+                    #print(f"({idx+1}/{len(Result_folders_sync)}) Synced {dir}\n")
+                    print(f'{dir} folder is synced. ({idx+1}/{len(Result_folders_sync)})')
                     uploaded += len(os.listdir(os.path.join(local_Result, dir)))
                     with open(upload_progress_ns, 'a') as upload_progress:
                         upload_progress.write(f'{100 * uploaded // uploading}\n')
@@ -178,50 +178,58 @@ if __name__ == '__main__':
                     synclog.write(','.join(os.listdir(os.path.join(local_Result, dir))))
                     synclog.write('\n')
 
-                if sync_dir_list:
-                    print(f"Synced {len(sync_dir_list)} patient folder(s) successfully.\n")
+                if Result_folders_sync:
+                    print(f"Synced {len(Result_folders_sync)} patient folder(s) successfully.\n")
                 else:
                     print("Nothing to sync.\n")
 
-            ### Phil 20210829 SyncLog.csv
+            ### Phil 20210829 SyncLog.csv on Desktop
             try:
-                os.system('cp SyncLog.csv ~/Desktop/')
-                print('Succeed to cp SyncLog.csv to Desktop')
+                os.system(f"copy SyncLog.csv {os.path.join(os.path.expanduser('~'), 'Desktop')}")
+                print('Succeed to copy SyncLog.csv to Desktop')
             except:
-                os.system('cp SyncLog.csv ~/Desktop/During_syncing_you_have_to_close_SyncLog.csv')
-                print('Fail to cp SyncLog.csv to Desktop')
+                os.system(f"copy SyncLog.csv {os.path.join(os.path.expanduser('~'), 'Desktop', 'During_syncing_you_have_to_close_SyncLog.csv')}")
+                print('Fail to copy SyncLog.csv to Desktop')
             
             print("Syncing files in logs...")
-            for idx, dir in enumerate(sync_report_file_list):
-                #print(f"({idx+1}/{len(sync_report_file_list)}) Syncing {dir}")
-                sync_file(dir, local_logs, netdrive_logs)
-                #print(f"({idx+1}/{len(sync_report_file_list)}) Synced {dir}\n")
-                print(f'{dir} is synced. ({idx+1}/{len(sync_report_file_list)})')
-            if sync_report_file_list:
-                print(f"Synced {len(sync_report_file_list)} log file(s) successfully.\n")
+            for idx, dir in enumerate(logs_files_sync):
+                #print(f"({idx+1}/{len(logs_files_sync)}) Syncing {dir}")
+                sync_file(dir, local_logs, Ndrive_logs)
+                #print(f"({idx+1}/{len(logs_files_sync)}) Synced {dir}\n")
+                print(f'{dir} is synced. ({idx+1}/{len(logs_files_sync)})')
+            if logs_files_sync:
+                print(f"Synced {len(logs_files_sync)} log file(s) successfully.\n")
             else:
                 print("Nothing to sync.\n")
         else:
-            print("Failed to connect to netdrive!")
+            print("Failed to connect to Ndrive!")
+            raise Exception
 
     sys.stdout = original_stdout
     print("ReportSyncLog finished.")
 
-    if os.path.exists(netdrive):
+    ### Phil 20210829 ReportSyncLog rename on Windows
+    os.system(f"move {log_file_name} {log_file_name.replace('site', site)}")
+
+    if os.path.exists(Ndrive):
         print("Syncing ReportSyncLog...")
-        for idx, dir in enumerate(sync_sync_file_list):
-            #print(f"({idx+1}/{len(sync_sync_file_list)}) Syncing {dir}")
-            sync_file(dir, local_ReportSyncLog, netdrive_ReportSyncLog)
-            #print(f"({idx+1}/{len(sync_sync_file_list)}) Synced {dir}\n")
-            print(f"{dir} is synced. ({idx+1}/{len(sync_sync_file_list)})")
-        if sync_sync_file_list:
-            print(f"Synced {len(sync_sync_file_list)} ReportSyncLog file(s) successfully.\n")
+        for idx, dir in enumerate(ReportSyncLog_files_sync):
+            #print(f"({idx+1}/{len(ReportSyncLog_files_sync)}) Syncing {dir}")
+            sync_file(dir, local_ReportSyncLog, Ndrive_ReportSyncLog)
+            #print(f"({idx+1}/{len(ReportSyncLog_files_sync)}) Synced {dir}\n")
+            print(f"{dir} is synced. ({idx+1}/{len(ReportSyncLog_files_sync)})")
+        if ReportSyncLog_files_sync:
+            print(f"Synced {len(ReportSyncLog_files_sync)} ReportSyncLog file(s) successfully.\n")
         else:
             print("Nothing to sync.\n")
     else:
-        print("Failed to connect to netdrive!")
+        print("Failed to connect to Ndrive!")
+        raise Exception
 
-### Phil 20210814
-    if os.path.exists(netdrive):
-        with open(upload_progress_ns, 'a') as upload_progress:
-            upload_progress.write('Finish!')
+### Phil 20210830
+except:
+    with open(upload_progress_ns, 'a') as upload_progress:
+        upload_progress.write('Fail!')
+else:
+    with open(upload_progress_ns, 'a') as upload_progress:
+        upload_progress.write('Finish!')

@@ -2,8 +2,11 @@
 import os, shutil, sys
 import time, datetime
 
+### Phil 20210829 ###
+import re, requests
+
 ### Phil 20210814 ###
-sync_log_csv = os.path.join(os.path.expanduser('~'), 'Desktop', 'sync_log.csv')
+SyncLog_csv = os.path.join(os.path.expanduser('~'), 'Desktop', 'SyncLog.csv')
 upload_progress_ns = os.path.join(os.getcwd(), 'upload_progress.ns')
 
 local_Result = os.path.join(os.getcwd(), "Result")
@@ -92,7 +95,9 @@ if __name__ == '__main__':
         upload_progress.write('...\n')
 
     dt = datetime.datetime.today()
-    log_file_name = f"log_{dt.date()}_{dt.hour}-{dt.minute}-{dt.second}.txt"
+    yyyymmdd, hhmmss = str(dt).split('.')[0].split()
+    yyyymmdd, hhmmss = yyyymmdd.replace('-', ''), hhmmss.replace(':', '')
+    log_file_name = f'{yyyymmdd}_{hhmmss}_site.txt'
     log_file_name = os.path.join(local_ReportSyncLog, log_file_name)
     original_stdout = sys.stdout
 
@@ -120,6 +125,9 @@ if __name__ == '__main__':
             local_ReportSyncLog_files =crawler(local_ReportSyncLog, "f")
             netdrive_ReportSyncLog_files = crawler(netdrive_ReportSyncLog, "f")
 
+            ### Phil 20210829 ###
+            site = re.search('H\d\d', str(local_Result_folders)).group(0)
+
             print("=== Result folders to sync ===")
             intersection_dir_list = compare_two_list(local_Result_folders, netdrive_Result_folders, "i")
             #print("=== Compare Same Dir Size (..\Result) ===")
@@ -128,6 +136,10 @@ if __name__ == '__main__':
             sync_dir_list = sorted(intersection_dir_list + difference_dir_list)
             print('\n'.join(sync_dir_list))
             print()
+
+            ### Phil 20210829 ###
+            payload = {'site': site, 'case': sync_dir_list}
+            requests.get('https://deqg3un8ha.execute-api.eu-central-1.amazonaws.com/start', params=payload)
 
             print('=== logs files to sync ===')
             intersection_report_file_list = compare_two_list(local_logs_files, netdrive_logs_files, "i")
@@ -145,10 +157,10 @@ if __name__ == '__main__':
             print('\n'.join(sync_sync_file_list))
             print()
 
-            if not os.path.exists(sync_log_csv):
-                with open(sync_log_csv, 'a') as sync_log:
-                    sync_log.write('Date,Time,Synced folder,Synced files\n')
-            with open(sync_log_csv, 'a') as sync_log:
+            if not os.path.exists(SyncLog_csv):
+                with open(SyncLog_csv, 'a') as synclog:
+                    synclog.write('Date,Time,Synced folder,Synced files\n')
+            with open(SyncLog_csv, 'a') as synclog:
                 print("Syncing patient folders in Result...")
                 uploading = uploaded = 0
                 for idx, dir in enumerate(sync_dir_list):
@@ -164,9 +176,9 @@ if __name__ == '__main__':
                     with open(upload_progress_ns, 'a') as upload_progress:
                         upload_progress.write(f'{100 * uploaded // uploading}\n')
 
-                    sync_log.write(f'{dt.date()},{dt.hour:2d}:{dt.minute:2d}:{dt.second:2d},{dir},')
-                    sync_log.write(','.join(os.listdir(os.path.join(local_Result, dir))))
-                    sync_log.write('\n')
+                    synclog.write(f'{dt.date()},{dt.hour:2d}:{dt.minute:2d}:{dt.second:2d},{dir},')
+                    synclog.write(','.join(os.listdir(os.path.join(local_Result, dir))))
+                    synclog.write('\n')
 
                 if sync_dir_list:
                     print(f"Synced {len(sync_dir_list)} patient folder(s) successfully.\n")

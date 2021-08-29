@@ -1,12 +1,12 @@
-#from genericpath import isfile
+# from genericpath import isfile
 import os, shutil, sys
 import time, datetime
 
-### Phil 20210829 ###
+### Phil 20210829 re.search site to requests.get API
 import re, requests
 
-### Phil 20210814 ###
-SyncLog_csv = os.path.join(os.path.expanduser('~'), 'Desktop', 'SyncLog.csv')
+### Phil 20210814 renaming
+# SyncLog_csv = os.path.join(os.path.expanduser('~'), 'Desktop', 'SyncLog.csv')
 upload_progress_ns = os.path.join(os.getcwd(), 'upload_progress.ns')
 
 local_Result = os.path.join(os.getcwd(), "Result")
@@ -17,7 +17,6 @@ netdrive = r"N:"
 netdrive_Result = r"N:Result"
 netdrive_logs = r'N:logs'
 netdrive_ReportSyncLog = r'N:ReportSyncLog'
-###
 
 # netdrive_Result = r"C:\Users\b03501063\Desktop\AWS2"
 # netdrive_ReportSyncLog = r'C:\Users\b03501063\Desktop\AWS2\ReportSyncLog'
@@ -37,7 +36,6 @@ def get_dir_size(dir: str):
     for root, dirs, files in os.walk(dir):
         size += sum([os.path.getsize(os.path.join(root, name)) for name in files])
     return size
-
 
 def compare_size(dir_name: str, src_path: str, des_path: str, method: str):
     dir_src_path = os.path.join(src_path, dir_name) 
@@ -125,7 +123,7 @@ if __name__ == '__main__':
             local_ReportSyncLog_files =crawler(local_ReportSyncLog, "f")
             netdrive_ReportSyncLog_files = crawler(netdrive_ReportSyncLog, "f")
 
-            ### Phil 20210829 ###
+            ### Phil 20210829
             site = re.search('H\d\d', str(local_Result_folders)).group(0)
 
             print("=== Result folders to sync ===")
@@ -137,7 +135,7 @@ if __name__ == '__main__':
             print('\n'.join(sync_dir_list))
             print()
 
-            ### Phil 20210829 ###
+            ### Phil 20210829
             payload = {'site': site, 'case': sync_dir_list}
             requests.get('https://deqg3un8ha.execute-api.eu-central-1.amazonaws.com/start', params=payload)
 
@@ -157,10 +155,10 @@ if __name__ == '__main__':
             print('\n'.join(sync_sync_file_list))
             print()
 
-            if not os.path.exists(SyncLog_csv):
-                with open(SyncLog_csv, 'a') as synclog:
+            if not os.path.exists('SyncLog.csv'):
+                with open('SyncLog.csv', 'a') as synclog:
                     synclog.write('Date,Time,Synced folder,Synced files\n')
-            with open(SyncLog_csv, 'a') as synclog:
+            with open('SyncLog.csv', 'a') as synclog:
                 print("Syncing patient folders in Result...")
                 uploading = uploaded = 0
                 for idx, dir in enumerate(sync_dir_list):
@@ -185,6 +183,14 @@ if __name__ == '__main__':
                 else:
                     print("Nothing to sync.\n")
 
+            ### Phil 20210829 SyncLog.csv
+            try:
+                os.system('cp SyncLog.csv ~/Desktop/')
+                print('Succeed to cp SyncLog.csv to Desktop')
+            except:
+                os.system('cp SyncLog.csv ~/Desktop/During_syncing_you_have_to_close_SyncLog.csv')
+                print('Fail to cp SyncLog.csv to Desktop')
+            
             print("Syncing files in logs...")
             for idx, dir in enumerate(sync_report_file_list):
                 #print(f"({idx+1}/{len(sync_report_file_list)}) Syncing {dir}")
@@ -215,7 +221,7 @@ if __name__ == '__main__':
     else:
         print("Failed to connect to netdrive!")
 
-### Phil 20210814 ###
+### Phil 20210814
     if os.path.exists(netdrive):
         with open(upload_progress_ns, 'a') as upload_progress:
             upload_progress.write('Finish!')

@@ -2,7 +2,7 @@
 import os, shutil, sys
 import time, datetime
 
-### Phil 20210829 re.search site to requests.get API
+### Phil 20210829 re.search site and requests.get API
 import re, requests
 
 ### Phil 20210814 renaming
@@ -88,6 +88,7 @@ def compare_two_list(src_list: list, des_list: list, method: str):
     elif method == 'd':
         return sorted(list(set(src_list).difference(des_list)))
 
+### Phil 20210830
 try:
     with open(upload_progress_ns, 'w') as upload_progress:
         upload_progress.write('...\n')
@@ -96,11 +97,12 @@ try:
     yyyymmdd, hhmmss = str(dt).split('.')[0].split()
     yyyymmdd, hhmmss = yyyymmdd.replace('-', ''), hhmmss.replace(':', '')
     log_file_name = f'{yyyymmdd}_{hhmmss}_site.txt'
-    log_file_name = os.path.join(local_ReportSyncLog, log_file_name)
+    local_log_file_name = os.path.join(local_ReportSyncLog, log_file_name)
+    Ndrive_log_file_name = os.path.join(Ndrive_ReportSyncLog, log_file_name)
     original_stdout = sys.stdout
 
-    # Syncing and Logging local_ReportSyncLog
-    with open(log_file_name, 'w') as f:
+    # Logging local_ReportSyncLog
+    with open(local_log_file_name, 'w') as f:
         sys.stdout = f
         if os.path.exists(Ndrive):
             # Result
@@ -134,11 +136,6 @@ try:
             Result_folders_sync = sorted(Result_folders_inter + Result_folders_diff)
             print('\n'.join(Result_folders_sync))
             print()
-
-            ### Phil 20210829
-            payload = {'site': site, 'cases': Result_folders_sync}
-            requests.get('https://deqg3un8ha.execute-api.eu-central-1.amazonaws.com/start', params=payload)
-
             print('=== logs files to sync ===')
             logs_files_inter = compare_two_list(local_logs_files, Ndrive_logs_files, "i")
             #print("=== Compare Same Log Files Size (..\logs) ===")
@@ -147,7 +144,6 @@ try:
             logs_files_sync = sorted(logs_files_inter + logs_files_diff)
             print('\n'.join(logs_files_sync))
             print()
-
             print('=== ReportSyncLog files to sync ===')
             ReportSyncLog_files_diff = compare_two_list(local_ReportSyncLog_files, Ndrive_ReportSyncLog_files, "d")
             ReportSyncLog_files_sync = sorted(ReportSyncLog_files_diff)
@@ -155,33 +151,38 @@ try:
             print('\n'.join(ReportSyncLog_files_sync))
             print()
 
-            if not os.path.exists('SyncLog.csv'):
+            ### Phil 20210831 division by zero bug
+            print("Syncing patient folders in Result...")
+            if Result_folders_sync:
+                payload = {'site': site, 'cases': Result_folders_sync}
+                requests.get('https://deqg3un8ha.execute-api.eu-central-1.amazonaws.com/start', params=payload)
+
+                if not os.path.exists('SyncLog.csv'):
+                    with open('SyncLog.csv', 'a') as synclog:
+                        synclog.write('Date,Time,Synced folder,Synced files\n')
                 with open('SyncLog.csv', 'a') as synclog:
-                    synclog.write('Date,Time,Synced folder,Synced files\n')
-            with open('SyncLog.csv', 'a') as synclog:
-                print("Syncing patient folders in Result...")
-                uploading = uploaded = 0
-                for idx, dir in enumerate(Result_folders_sync):
-                    uploading += len(os.listdir(os.path.join(local_Result, dir)))
-                with open(upload_progress_ns, 'a') as upload_progress:
-                    upload_progress.write('0\n')
-                for idx, dir in enumerate(Result_folders_sync):
-                    #print(f"({idx+1}/{len(Result_folders_sync)}) Syncing {dir}")
-                    sync_dir(dir, local_Result, Ndrive_Result)
-                    #print(f"({idx+1}/{len(Result_folders_sync)}) Synced {dir}\n")
-                    print(f'{dir} folder is synced. ({idx+1}/{len(Result_folders_sync)})')
-                    uploaded += len(os.listdir(os.path.join(local_Result, dir)))
                     with open(upload_progress_ns, 'a') as upload_progress:
-                        upload_progress.write(f'{100 * uploaded // uploading}\n')
+                        upload_progress.write('0\n')
+                    uploading = uploaded = 0
+                    for idx, dir in enumerate(Result_folders_sync):
+                        uploading += len(os.listdir(os.path.join(local_Result, dir)))
+                    for idx, dir in enumerate(Result_folders_sync):
+                        #print(f"({idx+1}/{len(Result_folders_sync)}) Syncing {dir}")
+                        sync_dir(dir, local_Result, Ndrive_Result)
+                        #print(f"({idx+1}/{len(Result_folders_sync)}) Synced {dir}\n")
+                        print(f'{dir} folder is synced. ({idx+1}/{len(Result_folders_sync)})')
+                        uploaded += len(os.listdir(os.path.join(local_Result, dir)))
+                        with open(upload_progress_ns, 'a') as upload_progress:
+                            upload_progress.write(f'{100 * uploaded // uploading}\n')
 
-                    synclog.write(f'{dt.date()},{dt.hour:2d}:{dt.minute:2d}:{dt.second:2d},{dir},')
-                    synclog.write(','.join(os.listdir(os.path.join(local_Result, dir))))
-                    synclog.write('\n')
-
-                if Result_folders_sync:
-                    print(f"Synced {len(Result_folders_sync)} patient folder(s) successfully.\n")
-                else:
-                    print("Nothing to sync.\n")
+                        synclog.write(f'{dt.date()},{dt.hour:2d}:{dt.minute:2d}:{dt.second:2d},{dir},')
+                        synclog.write(','.join(os.listdir(os.path.join(local_Result, dir))))
+                        synclog.write('\n')
+                print(f"Synced {len(Result_folders_sync)} patient folder(s) successfully.\n")
+            else:
+                with open(upload_progress_ns, 'a') as upload_progress:
+                    upload_progress.write('100\n')
+                print("Nothing to sync.\n")
 
             ### Phil 20210829 SyncLog.csv on Desktop
             try:
@@ -192,12 +193,12 @@ try:
                 print('Fail to copy SyncLog.csv to Desktop')
             
             print("Syncing files in logs...")
-            for idx, dir in enumerate(logs_files_sync):
-                #print(f"({idx+1}/{len(logs_files_sync)}) Syncing {dir}")
-                sync_file(dir, local_logs, Ndrive_logs)
-                #print(f"({idx+1}/{len(logs_files_sync)}) Synced {dir}\n")
-                print(f'{dir} is synced. ({idx+1}/{len(logs_files_sync)})')
             if logs_files_sync:
+                for idx, dir in enumerate(logs_files_sync):
+                    #print(f"({idx+1}/{len(logs_files_sync)}) Syncing {dir}")
+                    sync_file(dir, local_logs, Ndrive_logs)
+                    #print(f"({idx+1}/{len(logs_files_sync)}) Synced {dir}\n")
+                    print(f'{dir} is synced. ({idx+1}/{len(logs_files_sync)})')
                 print(f"Synced {len(logs_files_sync)} log file(s) successfully.\n")
             else:
                 print("Nothing to sync.\n")
@@ -208,17 +209,15 @@ try:
     sys.stdout = original_stdout
     print("ReportSyncLog finished.")
 
-    ### Phil 20210829 ReportSyncLog rename on Windows
-    os.system(f"move {log_file_name} {log_file_name.replace('site', site)}")
-
+    # Syncing local_ReportSyncLog
+    print("Syncing ReportSyncLog...")
     if os.path.exists(Ndrive):
-        print("Syncing ReportSyncLog...")
-        for idx, dir in enumerate(ReportSyncLog_files_sync):
-            #print(f"({idx+1}/{len(ReportSyncLog_files_sync)}) Syncing {dir}")
-            sync_file(dir, local_ReportSyncLog, Ndrive_ReportSyncLog)
-            #print(f"({idx+1}/{len(ReportSyncLog_files_sync)}) Synced {dir}\n")
-            print(f"{dir} is synced. ({idx+1}/{len(ReportSyncLog_files_sync)})")
         if ReportSyncLog_files_sync:
+            for idx, dir in enumerate(ReportSyncLog_files_sync):
+                #print(f"({idx+1}/{len(ReportSyncLog_files_sync)}) Syncing {dir}")
+                sync_file(dir, local_ReportSyncLog, Ndrive_ReportSyncLog)
+                #print(f"({idx+1}/{len(ReportSyncLog_files_sync)}) Synced {dir}\n")
+                print(f"{dir} is synced. ({idx+1}/{len(ReportSyncLog_files_sync)})")
             print(f"Synced {len(ReportSyncLog_files_sync)} ReportSyncLog file(s) successfully.\n")
         else:
             print("Nothing to sync.\n")
@@ -226,10 +225,13 @@ try:
         print("Failed to connect to Ndrive!")
         raise Exception
 
-### Phil 20210830
 except:
     with open(upload_progress_ns, 'a') as upload_progress:
         upload_progress.write('Fail!')
 else:
     with open(upload_progress_ns, 'a') as upload_progress:
         upload_progress.write('Finish!')
+finally:
+    ### Phil 20210829 ReportSyncLog rename on Windows
+    os.system(f"move {local_log_file_name} {local_log_file_name.replace('site', site)}")
+    os.system(f"move {Ndrive_log_file_name} {Ndrive_log_file_name.replace('site', site)}")

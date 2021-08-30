@@ -41,10 +41,10 @@ def compare_size(dir_name: str, src_path: str, des_path: str, method: str):
     dir_src_path = os.path.join(src_path, dir_name) 
     dir_des_path = os.path.join(des_path, dir_name)
     if method == "d":
-        print(f"({dir_name}\t local: {get_dir_size(dir_src_path)}\t Ndrive : {get_dir_size(dir_des_path)})")
+        print(f"{dir_name}\tlocal: {get_dir_size(dir_src_path)}\tNdrive : {get_dir_size(dir_des_path)}")
         return get_dir_size(dir_src_path) > get_dir_size(dir_des_path)
     if method == "f":
-        print(f"({dir_name}\t local: {os.path.getsize(dir_src_path)}\t Ndrive: {os.path.getsize(dir_des_path)})")
+        print(f"{dir_name}\tlocal: {os.path.getsize(dir_src_path)}\tNdrive: {os.path.getsize(dir_des_path)}")
         return os.path.getsize(dir_src_path) > os.path.getsize(dir_des_path)
 
 def sync_dir(dir_name: str, ori_path: str, target_path: str):
@@ -136,7 +136,7 @@ try:
             print()
 
             ### Phil 20210829
-            payload = {'site': site, 'case': Result_folders_sync}
+            payload = {'site': site, 'cases': Result_folders_sync}
             requests.get('https://deqg3un8ha.execute-api.eu-central-1.amazonaws.com/start', params=payload)
 
             print('=== logs files to sync ===')

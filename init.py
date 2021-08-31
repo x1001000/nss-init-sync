@@ -8,3 +8,6 @@ with requests.get('https://raw.githubusercontent.com/x1001000/nss-init-sync/main
     with open('patch.py', 'w') as f:
         f.write(r.text)
 os.system('python patch.py')
+
+with open('upload_progress.ns', 'w') as up:
+        up.write('...')

@@ -144,7 +144,7 @@ try:
             print("Result folders uploading...")
             if Result_folders_sync:
                 payload = {'site': site, 'cases': Result_folders_sync}
-                requests.get('https://deqg3un8ha.execute-api.eu-central-1.amazonaws.com/start', params=payload)
+                requests.get(sys.argv[1], params=payload)
 
                 if not os.path.exists('SyncLog.txt'):
                     with open('SyncLog.txt', 'a') as synclog:

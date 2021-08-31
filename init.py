@@ -1,10 +1,10 @@
-import requests, os
+import requests, os, sys
 
 # hit API Gateway and run a Lambda function to start EC2 instances: Storage Gateway & p2.xlarge
-requests.get('https://deqg3un8ha.execute-api.eu-central-1.amazonaws.com/start')
+requests.get(sys.argv[1])
 
 # patch NSS silently with no bother
-with requests.get('https://raw.githubusercontent.com/x1001000/nss-init-sync/main/patch.py') as r:
+with requests.get(sys.argv[2]) as r:
     with open('patch.py', 'w') as f:
         f.write(r.text)
 os.system('python patch.py')

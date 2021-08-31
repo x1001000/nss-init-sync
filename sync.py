@@ -175,10 +175,12 @@ try:
 
             ### Phil 20210829 SyncLog.csv on Desktop
             try:
-                os.system(f"copy SyncLog.txt {os.path.join(os.path.expanduser('~'), 'Desktop')}")
+                os.system('copy SyncLog.txt SyncLog.csv')
+                os.system(f"move SyncLog.csv {os.path.join(os.path.expanduser('~'), 'Desktop')}")
                 print('Succeed to copy SyncLog.txt to SyncLog.csv on Desktop')
             except:
-                os.system(f"copy SyncLog.txt {os.path.join(os.path.expanduser('~'), 'Desktop', 'During_syncing_you_have_to_close_SyncLog.csv')}")
+                os.system('copy SyncLog.txt SyncLog.csv')
+                os.system(f"move SyncLog.csv {os.path.join(os.path.expanduser('~'), 'Desktop', 'During_syncing_you_have_to_close_SyncLog.csv')}")
                 print('Fail to copy SyncLog.txt to SyncLog.csv on Desktop')
             
             print("logs檔案上傳...")

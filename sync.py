@@ -124,7 +124,7 @@ try:
             Result_folders_diff = compare_two_list(local_Result_folders, Ndrive_Result_folders, "d")
             Result_folders_sync = sorted(Result_folders_inter + Result_folders_diff)
             print('\n'.join(Result_folders_sync))
-            print('-'*60)
+            print('_'*60)
             print('logs files to upload:')
             logs_files_inter = compare_two_list(local_logs_files, Ndrive_logs_files, "i")
             #print("=== Compare Same Log Files Size (..\logs) ===")
@@ -132,7 +132,7 @@ try:
             logs_files_diff = compare_two_list(local_logs_files, Ndrive_logs_files, "d")
             logs_files_sync = sorted(logs_files_inter + logs_files_diff)
             print('\n'.join(logs_files_sync))
-            print('-'*60)
+            print('_'*60)
             print('ReportSyncLog files to upload:')
             ReportSyncLog_files_diff = compare_two_list(local_ReportSyncLog_files, Ndrive_ReportSyncLog_files, "d")
             ReportSyncLog_files_sync = sorted(ReportSyncLog_files_diff)
@@ -177,11 +177,11 @@ try:
             try:
                 os.system('copy SyncLog.txt SyncLog.csv')
                 os.system(f"move SyncLog.csv {os.path.join(os.path.expanduser('~'), 'Desktop')}")
-                print('Succeed to copy SyncLog.txt to SyncLog.csv on Desktop')
+                print(f"Succeed to copy SyncLog.txt to SyncLog.csv on Desktop\n{'_'*60}")
             except:
                 os.system('copy SyncLog.txt SyncLog.csv')
                 os.system(f"move SyncLog.csv {os.path.join(os.path.expanduser('~'), 'Desktop', 'During_syncing_you_have_to_close_SyncLog.csv')}")
-                print('Fail to copy SyncLog.txt to SyncLog.csv on Desktop')
+                print(f"Fail to copy SyncLog.txt to SyncLog.csv on Desktop\n{'_'*60}")
             
             print("logs files uploading...")
             if logs_files_sync:
@@ -190,9 +190,9 @@ try:
                     sync_file(dir, local_logs, Ndrive_logs)
                     #print(f"({idx+1}/{len(logs_files_sync)}) Synced {dir}\n")
                     print(f'{dir} is synced. ({idx+1}/{len(logs_files_sync)})')
-                print(f"{len(logs_files_sync)} logs files!\n{'-'*60}")
+                print(f"{len(logs_files_sync)} logs files!\n{'_'*60}")
             else:
-                print(f"Nothing!\n{'-'*60}")
+                print(f"Nothing!\n{'_'*60}")
         else:
             print("N drive doesn't exist!")
             raise Exception

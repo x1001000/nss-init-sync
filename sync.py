@@ -1,6 +1,12 @@
 # from genericpath import isfile
-import os, shutil, sys, requests
+import os, sys, requests
 import time, datetime
+import shutil
+
+### Phil 20210901 absolute path
+upload_progress_ns = os.path.join(os.getcwd(), 'upload_progress.ns')
+SyncLog_txt = os.path.join(os.getcwd(), 'SyncLog.txt')
+SyncLog_csv = os.path.join(os.path.expanduser('~'), 'Desktop', 'SyncLog.csv')
 
 ### Phil 20210814 renaming
 local_Result = os.path.join(os.getcwd(), "Result")
@@ -84,8 +90,7 @@ def compare_two_list(src_list: list, des_list: list, method: str):
 
 ### Phil 20210830
 try:
-    with open('CloudStatus.ns') as f:
-        site = f.readline()[:3]
+    site = sys.argv[1]
     dt = datetime.datetime.today()
     yyyymmdd, hhmmss = str(dt).split('.')[0].split()
     yyyymmdd, hhmmss = yyyymmdd.replace('-', ''), hhmmss.replace(':', '')
@@ -146,11 +151,11 @@ try:
                 payload = {'site': site, 'cases': Result_folders_sync}
                 requests.get(sys.argv[1], params=payload)
 
-                if not os.path.exists('SyncLog.txt'):
-                    with open('SyncLog.txt', 'a') as synclog:
+                if not os.path.exists(SyncLog_txt):
+                    with open(SyncLog_txt, 'a') as synclog:
                         synclog.write('Date,Time,Synced folder,Synced files\n')
-                with open('SyncLog.txt', 'a') as synclog:
-                    with open('upload_progress.ns', 'w') as up:
+                with open(SyncLog_txt, 'a') as synclog:
+                    with open(upload_progress_ns, 'w') as up:
                         up.write('0')
                     uploading = uploaded = 0
                     for idx, dir in enumerate(Result_folders_sync):
@@ -161,7 +166,7 @@ try:
                         #print(f"({idx+1}/{len(Result_folders_sync)}) Synced {dir}\n")
                         print(f'{dir} folder is synced. ({idx+1}/{len(Result_folders_sync)})')
                         uploaded += len(os.listdir(os.path.join(local_Result, dir)))
-                        with open('upload_progress.ns', 'a') as up:
+                        with open(upload_progress_ns, 'a') as up:
                             up.write(f'\n{100 * uploaded // uploading}')
 
                         synclog.write(f'{dt.date()},{dt.hour:2d}:{dt.minute:2d}:{dt.second:2d},{dir},')
@@ -169,18 +174,16 @@ try:
                         synclog.write('\n')
                 print(f"{len(Result_folders_sync)} Result folders!\n{'-'*60}")
             else:
-                with open('upload_progress.ns', 'a') as up:
+                with open(upload_progress_ns, 'a') as up:
                     up.write('\n100')
                 print(f"Nothing!\n{'-'*60}")
 
             ### Phil 20210829 SyncLog.csv on Desktop
             try:
-                os.system('copy SyncLog.txt SyncLog.csv')
-                os.system(f"move SyncLog.csv {os.path.join(os.path.expanduser('~'), 'Desktop')}")
+                os.system(f"copy {SyncLog_txt} {SyncLog_csv}")
                 print(f"Succeed to copy SyncLog.txt to SyncLog.csv on Desktop\n{'_'*60}")
             except:
-                os.system('copy SyncLog.txt SyncLog.csv')
-                os.system(f"move SyncLog.csv {os.path.join(os.path.expanduser('~'), 'Desktop', 'During_syncing_you_have_to_close_SyncLog.csv')}")
+                os.system(f"copy {SyncLog_txt} {SyncLog_csv[:-4]}_{yyyymmdd}_{hhmmss}_During_syncing_you_have_to_close_SyncLog.csv")
                 print(f"Fail to copy SyncLog.txt to SyncLog.csv on Desktop\n{'_'*60}")
             
             print("logs files uploading...")
@@ -217,8 +220,8 @@ try:
         raise Exception
 
 except:
-    with open('upload_progress.ns', 'a') as up:
+    with open(upload_progress_ns, 'a') as up:
         up.write('\nFail!')
 else:
-    with open('upload_progress.ns', 'a') as up:
+    with open(upload_progress_ns, 'a') as up:
         up.write('\nFinish!')

@@ -90,7 +90,7 @@ def compare_two_list(src_list: list, des_list: list, method: str):
 
 ### Phil 20210830
 try:
-    site = sys.argv[1]
+    site = sys.argv[2]
     dt = datetime.datetime.today()
     yyyymmdd, hhmmss = str(dt).split('.')[0].split()
     yyyymmdd, hhmmss = yyyymmdd.replace('-', ''), hhmmss.replace(':', '')

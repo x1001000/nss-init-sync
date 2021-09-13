@@ -148,9 +148,6 @@ try:
             ### Phil 20210831 division by zero bug
             print("Result folders uploading...")
             if Result_folders_sync:
-                payload = {'site': site, 'cases': Result_folders_sync}
-                requests.get(sys.argv[1], params=payload)
-
                 if not os.path.exists(SyncLog_txt):
                     with open(SyncLog_txt, 'a') as synclog:
                         synclog.write('Date,Time,Synced folder,Synced files\n')
@@ -173,6 +170,8 @@ try:
                         synclog.write(','.join(os.listdir(os.path.join(local_Result, dir))))
                         synclog.write('\n')
                 print(f"{len(Result_folders_sync)} Result folders!\n{'-'*60}")
+                payload = {'site': site, 'cases': Result_folders_sync}
+                requests.get(sys.argv[1], params=payload)
             else:
                 with open(upload_progress_ns, 'a') as up:
                     up.write('\n100')

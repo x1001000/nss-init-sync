@@ -90,7 +90,7 @@ def compare_two_list(src_list: list, des_list: list, method: str):
 
 ### Phil 20210830
 try:
-    site = sys.argv[2]
+    site = sys.argv[1]
     dt = datetime.datetime.today()
     yyyymmdd, hhmmss = str(dt).split('.')[0].split()
     yyyymmdd, hhmmss = yyyymmdd.replace('-', ''), hhmmss.replace(':', '')
@@ -171,7 +171,7 @@ try:
                         synclog.write('\n')
                 print(f"{len(Result_folders_sync)} Result folders!\n{'-'*60}")
                 payload = {'site': site, 'cases': Result_folders_sync}
-                requests.get(sys.argv[1], params=payload)
+                requests.get(sys.argv[2], params=payload)
             else:
                 with open(upload_progress_ns, 'a') as up:
                     up.write('\n100')

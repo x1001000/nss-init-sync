@@ -154,7 +154,7 @@ try:
                 with open(SyncLog_txt, 'a') as synclog:
                     with open(upload_progress_ns, 'w') as up:
                         up.write('0')
-                    uploading = uploaded = 0
+                    uploading = uploaded = 1
                     for idx, dir in enumerate(Result_folders_sync):
                         uploading += len(os.listdir(os.path.join(local_Result, dir)))
                     for idx, dir in enumerate(Result_folders_sync):

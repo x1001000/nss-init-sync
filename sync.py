@@ -34,7 +34,7 @@ def crawler(path: str, method: str):
 def get_dir_size(dir: str):
     size = 0
     for root, dirs, files in os.walk(dir):
-        size += sum([os.path.getsize(os.path.join(root, name)) for name in files])
+        size += sum([os.path.getsize(os.path.join(root, name)) for name in files if 'avi' not in name])
     return size
 
 def compare_size(dir_name: str, src_path: str, des_path: str, method: str):
@@ -61,7 +61,7 @@ def sync_dir(dir_name: str, ori_path: str, target_path: str):
         time.sleep(1)
         t += 1
 
-    shutil.copytree(ori_dir_path, target_dir_path)
+    shutil.copytree(ori_dir_path, target_dir_path, ignore=shutil.ignore_patterns('*avi*'))
     #print(f"Moved: {dir_name}")
 
 def sync_file(file_name: str, ori_path: str, target_path: str):
